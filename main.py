@@ -2,22 +2,13 @@ import pygame
 import sys
 
 pygame.init()
-CELL_SIZE = 100
-CELL_COUNT = 3
-WIDTH = CELL_SIZE * CELL_COUNT
-HEIGHT = CELL_SIZE * CELL_COUNT
-LINE_WIDTH = 5
-WIN_LINE_WIDTH = 10
-RED = (255, 0, 0)
-BG_COLOR = (255, 255, 255)
-LINE_COLOR = (0, 0, 0)
+pygame.display.set_caption('Крестики-нолики')
 cross_image = pygame.image.load('крестик.png')
 circle_image = pygame.image.load('нолик.png')
-cross_image = pygame.transform.scale(cross_image, (CELL_SIZE - 20, CELL_SIZE - 20))
-circle_image = pygame.transform.scale(circle_image, (CELL_SIZE - 20, CELL_SIZE - 20))
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Крестики-нолики')
-board = [[' ' for _ in range(CELL_COUNT)] for _ in range(CELL_COUNT)]
+cross_image = pygame.transform.scale(cross_image, (80, 80))
+circle_image = pygame.transform.scale(circle_image, (80, 80))
+screen = pygame.display.set_mode((300, 300))
+board = [[' ' for i in range(3)] for j in range(3)]
 current_player = 'X'
 game_over = False
 winner = None
@@ -25,16 +16,16 @@ winning_line = None
 
 
 def draw_board():
-    screen.fill(BG_COLOR)
-    for x in range(1, CELL_COUNT):
-        pygame.draw.line(screen, LINE_COLOR, (x * CELL_SIZE, 0), (x * CELL_SIZE, HEIGHT), LINE_WIDTH)
-        pygame.draw.line(screen, LINE_COLOR, (0, x * CELL_SIZE), (WIDTH, x * CELL_SIZE), LINE_WIDTH)
-    for row in range(CELL_COUNT):
-        for col in range(CELL_COUNT):
+    screen.fill('white')
+    for x in range(1, 3):
+        pygame.draw.line(screen, ('black'), (x * 100, 0), (x * 100, 300), 5)
+        pygame.draw.line(screen, ('black'), (0, x * 100), (300, x * 100), 5)
+    for row in range(3):
+        for col in range(3):
             if board[row][col] == 'X':
-                screen.blit(cross_image, (col * CELL_SIZE + 10, row * CELL_SIZE + 10))
+                screen.blit(cross_image, (col * 100 + 10, row * 100 + 10))
             elif board[row][col] == 'O':
-                screen.blit(circle_image, (col * CELL_SIZE + 10, row * CELL_SIZE + 10))
+                screen.blit(circle_image, (col * 100 + 10, row * 100 + 10))
     if winning_line and winner is not None:
         draw_winning_line(winning_line)
     pygame.display.flip()
@@ -43,28 +34,28 @@ def draw_board():
 def draw_winning_line(winning_combination):
     start_pos, end_pos = winning_combination
     if start_pos[1] > end_pos[1]:
-        start_x = WIDTH
+        start_x = 300
         start_y = 0
         end_x = 0
-        end_y = HEIGHT
+        end_y = 300
     else:
-        start_x = start_pos[1] * CELL_SIZE
-        start_y = start_pos[0] * CELL_SIZE
-        end_x = (end_pos[1] + 1) * CELL_SIZE
-        end_y = (end_pos[0] + 1) * CELL_SIZE
+        start_x = start_pos[1] * 100
+        start_y = start_pos[0] * 100
+        end_x = (end_pos[1] + 1) * 100
+        end_y = (end_pos[0] + 1) * 100
         if start_pos[0] == end_pos[0]:
-            start_y += CELL_SIZE // 2
+            start_y += 100 // 2
             end_y = start_y
         elif start_pos[1] == end_pos[1]:
-            start_x += CELL_SIZE // 2
+            start_x += 100 // 2
             end_x = start_x
-    pygame.draw.line(screen, RED, (start_x, start_y), (end_x, end_y), WIN_LINE_WIDTH)
+    pygame.draw.line(screen, ('red'), (start_x, start_y), (end_x, end_y), 10)
 
 
 def get_clicked_cell(mouse_position):
     x, y = mouse_position
-    row = y // CELL_SIZE
-    col = x // CELL_SIZE
+    row = y // 100
+    col = x // 100
     return row, col
 
 
@@ -77,11 +68,11 @@ def check_draw():
 
 def check_winner():
     global winner
-    for row in range(CELL_COUNT):
+    for row in range(3):
         if (board[row][0] == board[row][1] == board[row][2]) and (board[row][0] is not None):
             winner = board[row][0]
             return True
-    for col in range(CELL_COUNT):
+    for col in range(3):
         if (board[0][col] == board[1][col] == board[2][col]) and (board[0][col] is not None):
             winner = board[0][col]
             return True
@@ -130,11 +121,30 @@ def handle_event(event):
         sys.exit()
 
 
+pygame.font.init()
+font = pygame.font.Font(None, 36)
+
+
+def show_winner(winner):
+    if winner:
+        winner_text = f'Выиграл игрок {winner}'
+    else:
+        winner_text = 'Ничья'
+    text = font.render(winner_text, True, ('white'))
+    text_rect = text.get_rect(center=(150, 150))
+    background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10,
+                                  text_rect.width + 20, text_rect.height + 20)
+    pygame.draw.rect(screen, ('blue'), background_rect)
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+
+
 draw_board()
 timer_set = False
 while True:
     for event in pygame.event.get():
         handle_event(event)
     if game_over and not timer_set:
+        show_winner(winner)
         pygame.time.set_timer(pygame.USEREVENT, 2000)
         timer_set = True
