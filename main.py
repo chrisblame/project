@@ -16,10 +16,10 @@ winning_line = None
 
 
 def draw_board():
-    screen.fill('white')
+    screen.fill('Moccasin')
     for x in range(1, 3):
-        pygame.draw.line(screen, ('black'), (x * 100, 0), (x * 100, 300), 5)
-        pygame.draw.line(screen, ('black'), (0, x * 100), (300, x * 100), 5)
+        pygame.draw.line(screen, ('SaddleBrown'), (x * 100, 0), (x * 100, 300), 5)
+        pygame.draw.line(screen, ('SaddleBrown'), (0, x * 100), (300, x * 100), 5)
     for row in range(3):
         for col in range(3):
             if board[row][col] == 'X':
@@ -49,7 +49,7 @@ def draw_winning_line(winning_combination):
         elif start_pos[1] == end_pos[1]:
             start_x += 100 // 2
             end_x = start_x
-    pygame.draw.line(screen, ('red'), (start_x, start_y), (end_x, end_y), 10)
+    pygame.draw.line(screen, ('Tomato'), (start_x, start_y), (end_x, end_y), 10)
 
 
 def get_clicked_cell(mouse_position):
@@ -97,30 +97,6 @@ def get_winning_line(row, col):
     return None
 
 
-def handle_event(event):
-    global current_player, game_over, winner, winning_line
-    if event.type == pygame.QUIT:
-        pygame.quit()
-        sys.exit()
-    elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-        mouse_position = pygame.mouse.get_pos()
-        row, col = get_clicked_cell(mouse_position)
-        if board[row][col] == ' ':
-            board[row][col] = current_player
-            winning_line = get_winning_line(row, col)
-            if winning_line:
-                winner = current_player
-                game_over = True
-            elif check_draw():
-                game_over = True
-            else:
-                current_player = 'O' if current_player == 'X' else 'X'
-            draw_board()
-    elif event.type == pygame.USEREVENT:
-        pygame.quit()
-        sys.exit()
-
-
 pygame.font.init()
 font = pygame.font.Font(None, 36)
 
@@ -132,19 +108,69 @@ def show_winner(winner):
         winner_text = 'Ничья'
     text = font.render(winner_text, True, ('white'))
     text_rect = text.get_rect(center=(150, 150))
-    background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10,
-                                  text_rect.width + 20, text_rect.height + 20)
-    pygame.draw.rect(screen, ('blue'), background_rect)
+    background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10, text_rect.width + 20, text_rect.height + 20)
+    pygame.draw.rect(screen, ('Sienna'), background_rect, border_radius=10)
     screen.blit(text, text_rect)
+    pygame.display.flip()
+    new_game_button_rect = pygame.Rect(50, 220, 200, 50)
+    pygame.draw.rect(screen, ('Salmon'), new_game_button_rect, border_radius=10)
+    button_font = pygame.font.SysFont(None, 35)
+    button_text = button_font.render('Новая игра', True, ('Seashell'))
+    button_text_rect = button_text.get_rect(center=new_game_button_rect.center)
+    screen.blit(button_text, button_text_rect)
     pygame.display.flip()
 
 
+def show_new_game_button():
+    new_game_button_rect = pygame.Rect(50, 220, 200, 50)
+    pygame.draw.rect(screen, ('Salmon'), new_game_button_rect, border_radius=10)
+    button_font = pygame.font.SysFont(None, 35)
+    button_text = button_font.render('Новая игра', True, ('Seashell'))
+    button_text_rect = button_text.get_rect(center=new_game_button_rect.center)
+    screen.blit(button_text, button_text_rect)
+    pygame.display.flip()
+    return new_game_button_rect
+
+
+def reset_game():
+    global board, game_over, winner, winning_line, current_player
+    board = [[' ' for _ in range(3)] for _ in range(3)]
+    current_player = 'X'
+    game_over = False
+    winner = None
+    winning_line = None
+    draw_board()
+
+
+def handle_event(event, new_game_button_rect):
+    global current_player, game_over, winner, winning_line
+    if event.type == pygame.QUIT:
+        pygame.quit()
+        sys.exit()
+    elif event.type == pygame.MOUSEBUTTONDOWN:
+        if game_over and new_game_button_rect.collidepoint(event.pos):
+            reset_game()
+        elif not game_over:
+            mouse_position = pygame.mouse.get_pos()
+            row, col = get_clicked_cell(mouse_position)
+            if board[row][col] == ' ':
+                board[row][col] = current_player
+                winning_line = get_winning_line(row, col)
+                if winning_line:
+                    winner = current_player
+                    game_over = True
+                elif check_draw():
+                    game_over = True
+                else:
+                    current_player = 'O' if current_player == 'X' else 'X'
+                draw_board()
+
+
 draw_board()
-timer_set = False
+new_game_button_rect = pygame.Rect(50, 220, 200, 50)
 while True:
     for event in pygame.event.get():
-        handle_event(event)
-    if game_over and not timer_set:
+        handle_event(event, new_game_button_rect)
+    if game_over:
         show_winner(winner)
-        pygame.time.set_timer(pygame.USEREVENT, 2000)
-        timer_set = True
+        show_new_game_button()
