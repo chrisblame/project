@@ -7,7 +7,9 @@ cross_image = pygame.image.load('крестик.png')
 circle_image = pygame.image.load('нолик.png')
 cross_image = pygame.transform.scale(cross_image, (80, 80))
 circle_image = pygame.transform.scale(circle_image, (80, 80))
+new_game_button_rect = pygame.Rect(50, 220, 200, 50)
 screen = pygame.display.set_mode((300, 300))
+
 board = [[' ' for i in range(3)] for j in range(3)]
 current_player = 'X'
 game_over = False
@@ -18,8 +20,8 @@ winning_line = None
 def draw_board():
     screen.fill('Moccasin')
     for x in range(1, 3):
-        pygame.draw.line(screen, ('SaddleBrown'), (x * 100, 0), (x * 100, 300), 5)
-        pygame.draw.line(screen, ('SaddleBrown'), (0, x * 100), (300, x * 100), 5)
+        pygame.draw.line(screen, 'SaddleBrown', (x * 100, 0), (x * 100, 300), 5)
+        pygame.draw.line(screen, 'SaddleBrown', (0, x * 100), (300, x * 100), 5)
     for row in range(3):
         for col in range(3):
             if board[row][col] == 'X':
@@ -49,7 +51,7 @@ def draw_winning_line(winning_combination):
         elif start_pos[1] == end_pos[1]:
             start_x += 100 // 2
             end_x = start_x
-    pygame.draw.line(screen, ('Tomato'), (start_x, start_y), (end_x, end_y), 10)
+    pygame.draw.line(screen, 'Tomato', (start_x, start_y), (end_x, end_y), 10)
 
 
 def get_clicked_cell(mouse_position):
@@ -106,16 +108,16 @@ def show_winner(winner):
         winner_text = f'Выиграл игрок {winner}'
     else:
         winner_text = 'Ничья'
-    text = font.render(winner_text, True, ('white'))
+    text = font.render(winner_text, True, 'white')
     text_rect = text.get_rect(center=(150, 150))
     background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10, text_rect.width + 20, text_rect.height + 20)
-    pygame.draw.rect(screen, ('Sienna'), background_rect, border_radius=10)
+    pygame.draw.rect(screen, 'Sienna', background_rect, border_radius=10)
     screen.blit(text, text_rect)
     pygame.display.flip()
     new_game_button_rect = pygame.Rect(50, 220, 200, 50)
-    pygame.draw.rect(screen, ('Salmon'), new_game_button_rect, border_radius=10)
-    button_font = pygame.font.SysFont(None, 35)
-    button_text = button_font.render('Новая игра', True, ('Seashell'))
+    pygame.draw.rect(screen, 'Salmon', new_game_button_rect, border_radius=10)
+    button_font = pygame.font.SysFont('Lato', 35)
+    button_text = button_font.render('Новая игра', True, 'Seashell')
     button_text_rect = button_text.get_rect(center=new_game_button_rect.center)
     screen.blit(button_text, button_text_rect)
     pygame.display.flip()
@@ -123,9 +125,9 @@ def show_winner(winner):
 
 def show_new_game_button():
     new_game_button_rect = pygame.Rect(50, 220, 200, 50)
-    pygame.draw.rect(screen, ('Salmon'), new_game_button_rect, border_radius=10)
-    button_font = pygame.font.SysFont(None, 35)
-    button_text = button_font.render('Новая игра', True, ('Seashell'))
+    pygame.draw.rect(screen, 'Salmon', new_game_button_rect, border_radius=10)
+    button_font = pygame.font.SysFont('Lato', 35)
+    button_text = button_font.render('Новая игра', True, 'Seashell')
     button_text_rect = button_text.get_rect(center=new_game_button_rect.center)
     screen.blit(button_text, button_text_rect)
     pygame.display.flip()
@@ -135,7 +137,6 @@ def show_new_game_button():
 def reset_game():
     global board, game_over, winner, winning_line, current_player
     board = [[' ' for _ in range(3)] for _ in range(3)]
-    current_player = 'X'
     game_over = False
     winner = None
     winning_line = None
@@ -166,8 +167,61 @@ def handle_event(event, new_game_button_rect):
                 draw_board()
 
 
+def show_choice_screen():
+    screen.fill('Moccasin')
+    cross_button_rect = pygame.Rect(50, 70, 200, 50)
+    circle_button_rect = pygame.Rect(50, 200, 200, 50)
+    pygame.draw.rect(screen, 'SkyBlue', cross_button_rect, border_radius=10)
+    pygame.draw.rect(screen, 'SkyBlue', circle_button_rect, border_radius=10)
+    button_font = pygame.font.SysFont('Lato', 35)
+    cross_text = button_font.render('Играть за Х', True, 'Seashell')
+    circle_text = button_font.render('Играть за O', True, 'Seashell')
+    cross_text_rect = cross_text.get_rect(center=cross_button_rect.center)
+    circle_text_rect = circle_text.get_rect(center=circle_button_rect.center)
+    screen.blit(cross_text, cross_text_rect)
+    screen.blit(circle_text, circle_text_rect)
+    pygame.display.flip()
+    return cross_button_rect, circle_button_rect
+
+
+def handle_choice(event, cross_button_rect, circle_button_rect):
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if cross_button_rect.collidepoint(event.pos):
+            return 'X'
+        elif circle_button_rect.collidepoint(event.pos):
+            return 'O'
+    return None
+
+
+def start_game():
+    global current_player, game_over, board, winner, winning_line
+    cross_button_rect, circle_button_rect = show_choice_screen()
+    choice_made = False
+    while not choice_made:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            player_choice = handle_choice(event, cross_button_rect, circle_button_rect)
+            if player_choice:
+                current_player = player_choice
+                choice_made = True
+    reset_game()
+
+
+def main():
+    global current_player, game_over
+    start_game()
+    while True:
+        for event in pygame.event.get():
+            handle_event(event, new_game_button_rect)
+        if game_over:
+            show_winner(winner)
+            show_new_game_button()
+
+
+main()
 draw_board()
-new_game_button_rect = pygame.Rect(50, 220, 200, 50)
 while True:
     for event in pygame.event.get():
         handle_event(event, new_game_button_rect)
