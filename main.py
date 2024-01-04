@@ -9,12 +9,14 @@ cross_image = pygame.transform.scale(cross_image, (80, 80))
 circle_image = pygame.transform.scale(circle_image, (80, 80))
 new_game_button_rect = pygame.Rect(50, 220, 200, 50)
 screen = pygame.display.set_mode((300, 300))
-
 board = [[' ' for i in range(3)] for j in range(3)]
+starting_player = 'X'
 current_player = 'X'
 game_over = False
 winner = None
 winning_line = None
+pygame.font.init()
+font = pygame.font.Font(None, 36)
 
 
 def draw_board():
@@ -99,27 +101,16 @@ def get_winning_line(row, col):
     return None
 
 
-pygame.font.init()
-font = pygame.font.Font(None, 36)
-
-
 def show_winner(winner):
     if winner:
         winner_text = f'Выиграл игрок {winner}'
+        text = font.render(winner_text, True, 'white')
+        text_rect = text.get_rect(center=(150, 150))
+        background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10, text_rect.width + 20, text_rect.height + 20)
+        pygame.draw.rect(screen, 'Sienna', background_rect, border_radius=10)
+        screen.blit(text, text_rect)
     else:
-        winner_text = 'Ничья'
-    text = font.render(winner_text, True, 'white')
-    text_rect = text.get_rect(center=(150, 150))
-    background_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 10, text_rect.width + 20, text_rect.height + 20)
-    pygame.draw.rect(screen, 'Sienna', background_rect, border_radius=10)
-    screen.blit(text, text_rect)
-    pygame.display.flip()
-    new_game_button_rect = pygame.Rect(50, 220, 200, 50)
-    pygame.draw.rect(screen, 'Salmon', new_game_button_rect, border_radius=10)
-    button_font = pygame.font.SysFont('Lato', 35)
-    button_text = button_font.render('Новая игра', True, 'Seashell')
-    button_text_rect = button_text.get_rect(center=new_game_button_rect.center)
-    screen.blit(button_text, button_text_rect)
+        start_game()
     pygame.display.flip()
 
 
@@ -137,6 +128,7 @@ def show_new_game_button():
 def reset_game():
     global board, game_over, winner, winning_line, current_player
     board = [[' ' for _ in range(3)] for _ in range(3)]
+    current_player = starting_player
     game_over = False
     winner = None
     winning_line = None
@@ -144,7 +136,7 @@ def reset_game():
 
 
 def handle_event(event, new_game_button_rect):
-    global current_player, game_over, winner, winning_line
+    global current_player, game_over, winner, winning_line, starting_player
     if event.type == pygame.QUIT:
         pygame.quit()
         sys.exit()
@@ -160,8 +152,10 @@ def handle_event(event, new_game_button_rect):
                 if winning_line:
                     winner = current_player
                     game_over = True
+                    starting_player = current_player
                 elif check_draw():
                     game_over = True
+                    start_game()
                 else:
                     current_player = 'O' if current_player == 'X' else 'X'
                 draw_board()
@@ -194,7 +188,7 @@ def handle_choice(event, cross_button_rect, circle_button_rect):
 
 
 def start_game():
-    global current_player, game_over, board, winner, winning_line
+    global current_player, game_over, board, winner, winning_line, starting_player
     cross_button_rect, circle_button_rect = show_choice_screen()
     choice_made = False
     while not choice_made:
@@ -204,7 +198,7 @@ def start_game():
                 sys.exit()
             player_choice = handle_choice(event, cross_button_rect, circle_button_rect)
             if player_choice:
-                current_player = player_choice
+                current_player = starting_player = player_choice
                 choice_made = True
     reset_game()
 
